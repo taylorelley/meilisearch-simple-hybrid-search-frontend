@@ -9,8 +9,9 @@ services:
     ports:
       - "3000:80"
     environment:
-      # These are build-time variables - update .env.local for your needs
-      - VITE_MEILISEARCH_HOST=http://localhost:7700
+      # Runtime configuration - applied when container starts
+      # Change these values to customize your deployment
+      - VITE_MEILISEARCH_HOST=http://meilisearch:7700
       - VITE_MEILISEARCH_API_KEY=masterKey
       - VITE_MEILISEARCH_INDEX=movies
       - VITE_MEILISEARCH_SEMANTIC_RATIO=0.5
