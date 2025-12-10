@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Meilisearch search engine
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    container_name: meilisearch
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_ENV=production
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_HTTP_ADDR=0.0.0.0:7700
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - hybrid-search-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Frontend application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - GEMINI_API_KEY=${GEMINI_API_KEY}
+        - VITE_MEILISEARCH_HOST=${VITE_MEILISEARCH_HOST:-http://meilisearch:7700}
+        - VITE_MEILISEARCH_API_KEY=${VITE_MEILISEARCH_API_KEY}
+        - VITE_MEILISEARCH_INDEX=${VITE_MEILISEARCH_INDEX:-movies}
+        - VITE_MEILISEARCH_SEMANTIC_RATIO=${VITE_MEILISEARCH_SEMANTIC_RATIO:-0.5}
+        - VITE_MEILISEARCH_EMBEDDER=${VITE_MEILISEARCH_EMBEDDER:-default}
+        - VITE_APP_TITLE=${VITE_APP_TITLE:-Hybrid Search}
+        - VITE_APP_LOGO=${VITE_APP_LOGO}
+    container_name: hybrid-search-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      meilisearch:
+        condition: service_healthy
+    networks:
+      - hybrid-search-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  meilisearch_data:
+    driver: local
+
+networks:
+  hybrid-search-network:
+    driver: bridge
