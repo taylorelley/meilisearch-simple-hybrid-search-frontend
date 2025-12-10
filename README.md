@@ -70,7 +70,27 @@ docker compose --profile development up dev
 
 ## Docker Usage
 
-### Build Production Image
+### Using Pre-built Image (Recommended)
+
+Pull the latest published image from GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/taylorelley/meilisearch-simple-hybrid-search-frontend:latest
+
+# Run with custom configuration
+docker run -d \
+  -p 3000:80 \
+  -e VITE_MEILISEARCH_HOST=http://your-meilisearch:7700 \
+  -e VITE_MEILISEARCH_API_KEY=your-key \
+  -e VITE_MEILISEARCH_INDEX=your-index \
+  -e VITE_APP_TITLE="My Search" \
+  ghcr.io/taylorelley/meilisearch-simple-hybrid-search-frontend:latest
+```
+
+**Note:** Configuration is applied at runtime, so you can use the same image with different settings without rebuilding.
+
+### Build Production Image Locally
 
 ```bash
 docker build -t meilisearch-hybrid-search .
