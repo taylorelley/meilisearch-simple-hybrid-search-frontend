@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { CONFIG, MAX_CONTEXT_HITS } from './constants';
+import { CONFIG } from './constants';
 import { searchMeili } from './services/meilisearchService';
-import { generateSearchSummaryStream } from './services/geminiService';
-import { SearchState, AISummaryState } from './types';
+import { SearchState } from './types';
 import { SearchIcon } from './components/Icons';
 import { ThemeToggle } from './components/ThemeToggle';
-import AISummary from './components/AISummary';
 import ResultCard from './components/ResultCard';
 
 const App: React.FC = () => {
@@ -20,14 +18,6 @@ const App: React.FC = () => {
     searchTime: 0,
   });
 
-  // -- AI State --
-  const [aiState, setAiState] = useState<AISummaryState>({
-    content: '',
-    isStreaming: false,
-    isLoading: false,
-    error: null,
-  });
-
   // Debounce ref
   const searchTimeout = useRef<any>(null);
 
@@ -36,27 +26,19 @@ const App: React.FC = () => {
   const handleSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
 
-    // Reset AI state on new search
-    setAiState({ content: '', isStreaming: false, isLoading: false, error: null });
-    
     // Immediately set hasSearched to trigger the layout animation
     setSearchState(prev => ({ ...prev, isLoading: true, error: null, hasSearched: true, query: searchQuery }));
 
     try {
-      // 1. Fetch Search Results
+      // Fetch Search Results
       const response = await searchMeili(searchQuery);
-      
+
       setSearchState(prev => ({
         ...prev,
         results: response.hits,
         isLoading: false,
         searchTime: response.processingTimeMs,
       }));
-
-      // 2. Trigger AI Summary if we have results
-      if (response.hits.length > 0) {
-        triggerAISummary(searchQuery, response.hits);
-      }
 
     } catch (err: any) {
       setSearchState(prev => ({
@@ -66,34 +48,6 @@ const App: React.FC = () => {
       }));
     }
   }, []);
-
-  const triggerAISummary = async (searchQuery: string, hits: any[]) => {
-    setAiState(prev => ({ ...prev, isLoading: true, content: '' }));
-    
-    try {
-        const topHits = hits.slice(0, MAX_CONTEXT_HITS);
-        const stream = await generateSearchSummaryStream(searchQuery, topHits);
-        
-        setAiState(prev => ({ ...prev, isLoading: false, isStreaming: true }));
-
-        let fullContent = '';
-        for await (const chunk of stream) {
-            fullContent += chunk;
-            setAiState(prev => ({ ...prev, content: fullContent }));
-        }
-
-        setAiState(prev => ({ ...prev, isStreaming: false }));
-
-    } catch (err: any) {
-        console.error("AI Error", err);
-        setAiState(prev => ({ 
-            ...prev, 
-            isLoading: false, 
-            isStreaming: false, 
-            error: "Failed to generate AI summary." 
-        }));
-    }
-  };
 
   const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,9 +148,6 @@ const App: React.FC = () => {
                     </div>
                 )}
 
-                {/* AI Summary Section */}
-                <AISummary state={aiState} onRetry={() => triggerAISummary(searchState.query, searchState.results)} />
-
                 {/* Main Results List */}
                 <div className="space-y-4 pb-12">
                     {searchState.isLoading ? (
@@ -230,7 +181,7 @@ const App: React.FC = () => {
        {/* Footer */}
        {hasSearched && (
         <footer className="py-6 text-center text-xs text-slate-400 dark:text-slate-600 border-t border-slate-100 dark:border-slate-800 mt-auto">
-            <p>Powered by Meilisearch & Google Gemini</p>
+            <p>Powered by Meilisearch Hybrid Search</p>
         </footer>
        )}
     </div>

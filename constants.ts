@@ -20,7 +20,3 @@ export const CONFIG: AppConfig = {
   semanticRatio: parseRatio(process.env.VITE_MEILISEARCH_SEMANTIC_RATIO, 0.5),
   embedder: process.env.VITE_MEILISEARCH_EMBEDDER || 'default',
 };
-
-// AI Configuration
-export const AI_MODEL_NAME = 'gemini-2.5-flash';
-export const MAX_CONTEXT_HITS = 5; // How many search results to feed the AI

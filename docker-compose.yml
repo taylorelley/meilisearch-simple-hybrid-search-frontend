@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Frontend application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      # These are build-time variables - update .env.local for your needs
+      - VITE_MEILISEARCH_HOST=http://localhost:7700
+      - VITE_MEILISEARCH_API_KEY=masterKey
+      - VITE_MEILISEARCH_INDEX=movies
+      - VITE_MEILISEARCH_SEMANTIC_RATIO=0.5
+      - VITE_MEILISEARCH_EMBEDDER=default
+      - VITE_APP_TITLE=Hybrid Search
+    depends_on:
+      - meilisearch
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Meilisearch instance
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=masterKey
+      - MEILI_ENV=development
+      - MEILI_HTTP_ADDR=0.0.0.0:7700
+    volumes:
+      - meilisearch-data:/meili_data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Development server (alternative to production build)
+  dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3001:3000"
+    command: sh -c "npm install && npm run dev"
+    environment:
+      - VITE_MEILISEARCH_HOST=http://localhost:7700
+      - VITE_MEILISEARCH_API_KEY=masterKey
+      - VITE_MEILISEARCH_INDEX=movies
+      - VITE_MEILISEARCH_SEMANTIC_RATIO=0.5
+      - VITE_MEILISEARCH_EMBEDDER=default
+      - VITE_APP_TITLE=Hybrid Search
+    depends_on:
+      - meilisearch
+    networks:
+      - app-network
+    profiles:
+      - development
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  meilisearch-data:

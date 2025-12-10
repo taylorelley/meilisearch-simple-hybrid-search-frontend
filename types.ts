@@ -31,13 +31,6 @@ export interface SearchState {
   searchTime: number;
 }
 
-export interface AISummaryState {
-  content: string;
-  isStreaming: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
 export interface AppConfig {
   meiliHost: string;
   meiliKey: string;
