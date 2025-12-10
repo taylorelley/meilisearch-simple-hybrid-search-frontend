@@ -7,6 +7,11 @@ import { ThemeToggle } from './components/ThemeToggle';
 import ResultCard from './components/ResultCard';
 
 const App: React.FC = () => {
+  // Set page title from config
+  useEffect(() => {
+    document.title = CONFIG.appTitle;
+  }, []);
+
   // -- Search State --
   const [query, setQuery] = useState('');
   const [searchState, setSearchState] = useState<SearchState>({
