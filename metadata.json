@@ -1,0 +1,5 @@
+{
+  "name": "MeiliGemini Hybrid Search",
+  "description": "A modern, hybrid AI search interface connecting Meilisearch results with Google Gemini's generative capabilities for a Google-like AI search experience.",
+  "requestFramePermissions": []
+}
