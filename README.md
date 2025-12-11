@@ -366,6 +366,34 @@ docker run -d \
 
 ## 🔧 Troubleshooting
 
+### Environment Variables Not Applied (Docker)
+
+**Symptoms:** Changes to environment variables (like API key) don't take effect in running container
+
+**Solutions:**
+1. **Force browser refresh** to clear cached config:
+   - Chrome/Firefox: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
+   - Or open DevTools → Network → Disable cache
+2. **Restart the container** after changing environment variables:
+   ```bash
+   docker compose restart frontend
+   # or
+   docker restart <container-name>
+   ```
+3. **Verify runtime config is generated**:
+   ```bash
+   # Check container logs for config generation
+   docker logs <container-name> | grep "Runtime configuration"
+
+   # Should show: "✓ Runtime configuration generated successfully"
+   ```
+4. **Check config.js file** inside container:
+   ```bash
+   docker exec <container-name> cat /usr/share/nginx/html/config.js
+   ```
+
+**Note:** Environment variables are applied at **container startup**, not build time. If you rebuild the image, you still need to set env vars when running the container.
+
 ### "Cannot connect to Meilisearch"
 
 **Symptoms:** Error message on page load
@@ -375,7 +403,7 @@ docker run -d \
    ```bash
    curl http://localhost:7700/health
    ```
-2. Verify `VITE_MEILISEARCH_HOST` in `.env.local`
+2. Verify `VITE_MEILISEARCH_HOST` in `.env.local` (dev) or environment variable (Docker)
 3. Check CORS settings on Meilisearch
 4. Ensure API key is correct (if using authentication)
 
