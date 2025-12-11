@@ -7,9 +7,30 @@ set -e
 echo "Generating runtime configuration from environment variables..."
 
 # Helper function to escape strings for JSON
+# POSIX-compatible version that works with BusyBox/Alpine awk
 # Properly handles backslashes, quotes, and control characters
 json_string() {
-  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\x0d/\\r/g; s/\x0a/\\n/g; s/\x09/\\t/g'
+  printf '%s' "$1" | awk '
+  BEGIN {
+    result = ""
+  }
+  {
+    # Escape backslashes first (must be done before other escapes)
+    gsub(/\\/, "\\\\", $0)
+    # Escape double quotes
+    gsub(/"/, "\\\"", $0)
+    # Escape carriage returns
+    gsub(/\r/, "\\r", $0)
+    # Escape tabs
+    gsub(/\t/, "\\t", $0)
+
+    # Append line to result, adding escaped newline between lines
+    if (NR > 1) result = result "\\n"
+    result = result $0
+  }
+  END {
+    printf "%s", result
+  }'
 }
 
 # Get env values with defaults
